@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "aes.h"
 
 
 uint8_t s(uint8_t c){
@@ -17,11 +18,14 @@ uint8_t s(uint8_t c){
 
 
 void display_block(uint8_t b[16]){
-	for(int i = 0; i<16;i++) {
-		printf("%02X ",b[i]);
-		if (i==3 || i==7 || i==11 || i==15) printf("\n");
+	uint8_t i,j;
+	for(i=0;i<4;i++){
+		for(j=0;j<4;j++){
+			printf("%02X ",b[i+4*j]);
+		}
+		printf("\n");
 	}
-
+printf("\n");
 }
 
 
@@ -29,13 +33,13 @@ void display_block(uint8_t b[16]){
 void shift_rows(uint8_t block[16]){
 	uint8_t tmp0,tmp1;
 	/* First row will be ignored, Second row will be shifted 1 element to the left */
-	tmp0=block[4];block[4]=block[5];block[5]=block[6];block[6]=block[7];block[7]=tmp0;
+	tmp0=block[1];block[1]=block[5];block[5]=block[9];block[9]=block[13];block[13]=tmp0;
 
 	/*3rd row will be shifted 2 elements to the left */
-	tmp0=block[8];tmp1=block[9];block[8]=block[10];block[9]=block[11];block[10]=tmp0;block[11]=tmp1;
+	tmp0=block[2];tmp1=block[6];block[2]=block[10];block[6]=block[14];block[10]=tmp0;block[14]=tmp1;
 
 	/*4th row will be shifted 3 elements to the left which is equivalent to 1 element shift to the right */
-	tmp0=block[15];block[15]=block[14];block[14]=block[13];block[13]=block[12];block[12]=tmp0;
+	tmp0=block[15];block[15]=block[11];block[11]=block[7];block[7]=block[3];block[3]=tmp0;
 }
 
 /**
@@ -82,7 +86,7 @@ uint32_t g(uint32_t a, uint8_t round_nbr){
 
 }
 
-void expand_key(uint8_t p_key[16],uint8_t next_key[16],uint8_t round_nbr){
+void expand_key(uint8_t key[16],uint8_t round_nbr){
 	/*v divides the input key into 4 words of 32 bits*/
 	uint32_t v[4];
 
@@ -93,10 +97,10 @@ void expand_key(uint8_t p_key[16],uint8_t next_key[16],uint8_t round_nbr){
 	 *  every 4 bytes in the key are mapped to a 32 bit word in v
 	 */
 
-	v[0]=( ((uint32_t)p_key[0])<<24 ) | ( ((uint32_t)p_key[1])<<16 ) | ( ((uint32_t)p_key[2])<<8 ) | ( ((uint32_t)p_key[3]) );
-	v[1]=( ((uint32_t)p_key[4])<<24 ) | ( ((uint32_t)p_key[5])<<16 ) | ( ((uint32_t)p_key[6])<<8 ) | ( ((uint32_t)p_key[7]) );
-	v[2]=( ((uint32_t)p_key[8])<<24 ) | ( ((uint32_t)p_key[9])<<16 ) | ( ((uint32_t)p_key[10])<<8 ) | ( ((uint32_t)p_key[11]) );
-	v[3]=( ((uint32_t)p_key[12])<<24 ) | ( ((uint32_t)p_key[13])<<16 ) | ( ((uint32_t)p_key[14])<<8 ) | ( ((uint32_t)p_key[15]) );
+	v[0]=( ((uint32_t)key[0])<<24 ) | ( ((uint32_t)key[1])<<16 ) | ( ((uint32_t)key[2])<<8 ) | ( ((uint32_t)key[3]) );
+	v[1]=( ((uint32_t)key[4])<<24 ) | ( ((uint32_t)key[5])<<16 ) | ( ((uint32_t)key[6])<<8 ) | ( ((uint32_t)key[7]) );
+	v[2]=( ((uint32_t)key[8])<<24 ) | ( ((uint32_t)key[9])<<16 ) | ( ((uint32_t)key[10])<<8 ) | ( ((uint32_t)key[11]) );
+	v[3]=( ((uint32_t)key[12])<<24 ) | ( ((uint32_t)key[13])<<16 ) | ( ((uint32_t)key[14])<<8 ) | ( ((uint32_t)key[15]) );
 
 
 	/*calculate the words that make up the next key*/
@@ -106,11 +110,11 @@ void expand_key(uint8_t p_key[16],uint8_t next_key[16],uint8_t round_nbr){
 	w[2]=w[1]^v[2];
 	w[3]=w[2]^v[3];
 
-	/*move the bits from w to  next_key*/
-	next_key[0]=(uint8_t)(w[0]>>24); next_key[1]=(uint8_t)(w[0]>>16);next_key[2]=(uint8_t)(w[0]>>8);next_key[3]=(uint8_t)w[0];
-	next_key[4]=(uint8_t)(w[1]>>24); next_key[5]=(uint8_t)(w[1]>>16);next_key[6]=(uint8_t)(w[1]>>8);next_key[7]=(uint8_t)w[1];
-	next_key[8]=(uint8_t)(w[2]>>24); next_key[9]=(uint8_t)(w[2]>>16);next_key[10]=(uint8_t)(w[2]>>8);next_key[11]=(uint8_t)w[2];
-	next_key[12]=(uint8_t)(w[3]>>24); next_key[13]=(uint8_t)(w[3]>>16);next_key[14]=(uint8_t)(w[3]>>8);next_key[15]=(uint8_t)w[3];
+	/*move the bits from w to  key*/
+	key[0]=(uint8_t)(w[0]>>24); key[1]=(uint8_t)(w[0]>>16);key[2]=(uint8_t)(w[0]>>8);key[3]=(uint8_t)w[0];
+	key[4]=(uint8_t)(w[1]>>24); key[5]=(uint8_t)(w[1]>>16);key[6]=(uint8_t)(w[1]>>8);key[7]=(uint8_t)w[1];
+	key[8]=(uint8_t)(w[2]>>24); key[9]=(uint8_t)(w[2]>>16);key[10]=(uint8_t)(w[2]>>8);key[11]=(uint8_t)w[2];
+	key[12]=(uint8_t)(w[3]>>24); key[13]=(uint8_t)(w[3]>>16);key[14]=(uint8_t)(w[3]>>8);key[15]=(uint8_t)w[3];
 }
 
 /*
@@ -149,14 +153,14 @@ void mix_columns(uint8_t B[16]){
 	for(l=0;l<4;l++)
 		for(k=0;k<4;k++){
 			for(m=0;m<4;m++)
-				temp^=_mult(B[4*m+k],M[4*l+m]);
-			C[4*l+k]=temp;
+				temp^=_mult(B[4*k+m],M[4*l+m]);
+			C[4*k+l]=temp;
 			temp=0;
 		}
 	memcpy(B,C,16);
 }
 
-uint8_t aes128(uint8_t txt[16], uint8_t cyphertxt[16], uint8_t key[16]){
+void aes128(uint8_t txt[16], uint8_t key[16]){
 	/*
 	 * Note:
 	 * The plain text is shuffled 10 times, called rounds.
@@ -165,9 +169,9 @@ uint8_t aes128(uint8_t txt[16], uint8_t cyphertxt[16], uint8_t key[16]){
 	 * Pseudo code for aes128:
 	 * Begin AES
 	 *
-	 *
+	 * XOR plain text with the key
 	 * Repeat 10 times
-	 *
+	 *	substitute bytes using sbox
 	 * 	shift Rows
 	 * 	Mix Columns (in the last round, mix columns is ommited)
 	 * 	Derive next key in the schedule
@@ -175,20 +179,22 @@ uint8_t aes128(uint8_t txt[16], uint8_t cyphertxt[16], uint8_t key[16]){
 	 *
 	 * 	End AES
 	 */
+
 	uint8_t i,j;
 
 	/*XOR plain text with the key*/
 	for(i=0;i<16;i++)
 		txt[i]=txt[i]^key[i];
-
 	for(j=0;j<10;j++){
 		/*substitute bytes using sbox*/
 		for(i=0;i<16;i++)
 				txt[i]=s(txt[i]);
-
-
 		shift_rows(txt);
-		mix_columns(txt);
+		if (j!=9)
+			mix_columns(txt);
+		expand_key(key,j);
+		for(i=0;i<16;i++)
+				txt[i]=txt[i]^key[i];
 
 	}
 
