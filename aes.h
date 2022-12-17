@@ -18,7 +18,7 @@ int encrypt_file_aes128(FILE * plain_file, FILE * encrypted_file, char * key);
  * @param uint8_t key[16] is the encryption key.
  * @return 0 in case of success, 1 otherwise
  */
-uint8_t aes128(uint8_t plaintext[16], uint8_t cyphertext[16], uint8_t key[16]);
+uint8_t aes128(uint8_t plaintxt[16], uint8_t cyphertxt[16], uint8_t key[16]);
 
 /**
  * @brief s is a transformation that maps an 8-bit input, c, to an 8-bit output according to the S-Box.

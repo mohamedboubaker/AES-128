@@ -154,5 +154,42 @@ void mix_columns(uint8_t B[16]){
 			temp=0;
 		}
 	memcpy(B,C,16);
+}
+
+uint8_t aes128(uint8_t txt[16], uint8_t cyphertxt[16], uint8_t key[16]){
+	/*
+	 * Note:
+	 * The plain text is shuffled 10 times, called rounds.
+	 * the values of the plain text in each round is called state matrix.
+	 *
+	 * Pseudo code for aes128:
+	 * Begin AES
+	 *
+	 *
+	 * Repeat 10 times
+	 *
+	 * 	shift Rows
+	 * 	Mix Columns (in the last round, mix columns is ommited)
+	 * 	Derive next key in the schedule
+	 * 	XOR state matrix with the key schedule
+	 *
+	 * 	End AES
+	 */
+	uint8_t i,j;
+
+	/*XOR plain text with the key*/
+	for(i=0;i<16;i++)
+		txt[i]=txt[i]^key[i];
+
+	for(j=0;j<10;j++){
+		/*substitute bytes using sbox*/
+		for(i=0;i<16;i++)
+				txt[i]=s(txt[i]);
+
+
+		shift_rows(txt);
+		mix_columns(txt);
+
+	}
 
 }
